@@ -44,7 +44,7 @@ namespace WidgetUI
 		protected RectTransform m_listArea;
 		protected RectTransform m_selectedItemArea;
 		protected Button m_pushButton;
-        protected Canvas m_parentCanvas;
+		protected Canvas m_parentCanvas;
 
 		protected ListWidgetType m_list;
 
@@ -249,9 +249,9 @@ namespace WidgetUI
 				Vector3 mousePos = Input.mousePosition;
 				Vector2 mouseScreenPos = new Vector2(mousePos.x, mousePos.y);
 
-                Camera canvas_camera = m_parentCanvas == null ? null : m_parentCanvas.worldCamera;
-				bool clickedOwnTransform = RectTransformUtility.RectangleContainsScreenPoint(this.transform as RectTransform, mouseScreenPos, canvas_camera);
-                bool clickedListTransform = RectTransformUtility.RectangleContainsScreenPoint( m_listArea, mouseScreenPos, canvas_camera );
+				Camera canvasCamera = m_parentCanvas == null ? null : m_parentCanvas.worldCamera;
+				bool clickedOwnTransform = RectTransformUtility.RectangleContainsScreenPoint(this.transform as RectTransform, mouseScreenPos, canvasCamera);
+				bool clickedListTransform = RectTransformUtility.RectangleContainsScreenPoint( m_listArea, mouseScreenPos, canvasCamera );
 
 				if (m_clickAnywhereToOpen && clickedOwnTransform)
 				{
