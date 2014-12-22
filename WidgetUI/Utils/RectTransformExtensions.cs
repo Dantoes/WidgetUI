@@ -55,5 +55,16 @@ namespace WidgetUI
 				break;
 			}
 		}
+
+		public static Rect GetWorldRect(this RectTransform p_transform)
+		{
+			// rect in local space
+			Rect rect = p_transform.rect;
+
+			// calculate and assign world space position
+			rect.position = (Vector2)p_transform.TransformPoint(rect.xMin, rect.yMin, 0.0F);
+
+			return rect;
+		}
 	}
 }
