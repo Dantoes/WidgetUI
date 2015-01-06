@@ -24,6 +24,7 @@ namespace WidgetUI.Detail
 		protected RectTransform m_scrollTransform;
 		protected RectTransform m_contentArea;
 
+		protected int m_selectedItemIndex = -1;
 		protected ItemSelectEvent<T> m_onItemSelect = new ItemSelectEvent<T>();
 
 		public ItemSelectEvent<T> OnSelectItem
@@ -70,9 +71,6 @@ namespace WidgetUI.Detail
 		protected abstract IWidgetAllocator<WidgetType> GetWidgetAllocator();
 		protected abstract LayoutType GetLayout();
 		protected abstract ScrollRect GetScrollRect();
-		public abstract void Insert(int index, T item);
-		public abstract void RemoveAt(int index);
-		public abstract void Clear();
 		public abstract T this[int index] { get; set; }
 
 
@@ -156,6 +154,76 @@ namespace WidgetUI.Detail
 			}
 		}
 
+		public int SelectedItemIndex
+		{
+			get
+			{
+				return m_selectedItemIndex;
+			}
+			set
+			{
+				if(m_selectedItemIndex >= this.Count)
+				{
+					throw new ArgumentOutOfRangeException("SelectedItemIndex out of range");
+				}
+				m_selectedItemIndex = value;
+			}
+		}
+
+		public T SelectedItem
+		{
+			get
+			{
+				return (m_selectedItemIndex < 0) ? default(T) : this[m_selectedItemIndex];
+			}
+		}
+
+		public virtual void Insert(int p_index, T p_item)
+		{
+			this.Insert_Internal(p_index, p_item);
+			this.RecreateWidgetListeners(p_index + 1);
+		}
+
+		private void Insert_Internal(int p_index, T p_item)
+		{
+			if (p_index <= m_selectedItemIndex)
+			{
+				++m_selectedItemIndex;
+			}
+
+			m_items.Insert(p_index, p_item);
+			m_widgets.Insert(p_index, null);
+		}
+
+		public virtual void RemoveAt(int p_index)
+		{
+			this.RemoveAt_Internal(p_index);
+			this.RecreateWidgetListeners(p_index);
+		}
+
+		private void RemoveAt_Internal(int p_index)
+		{
+			// update selected item index
+			if (p_index == m_selectedItemIndex)
+			{
+				m_selectedItemIndex = -1;
+			}
+			else if (p_index < m_selectedItemIndex)
+			{
+				--m_selectedItemIndex;
+			}
+
+			m_items.RemoveAt(p_index);
+			m_widgets.RemoveAt(p_index);
+		}
+
+		public virtual void Clear()
+		{
+			m_selectedItemIndex = -1;
+			m_items.Clear();
+			m_widgets.Clear();
+		}
+
 		public virtual void ScrollTo(int p_index)
 		{
 			Vector2 widgetPosition = m_layout.GetWidgetPosition(p_index);
@@ -173,15 +241,15 @@ namespace WidgetUI.Detail
 
 		public virtual IList<T> Remove(Predicate<T> p_match)
 		{
-			List<T> removeItems = new List<T>(this.Count / 2);
+			List<T> removedItems = new List<T>(this.Count / 4);
 
 			for (int i = 0; i < m_items.Count; )
 			{
 				T item = m_items[i];
 				if (p_match(item))
 				{
-					removeItems.Add(item);
-					m_items.RemoveAt(i);
+					removedItems.Add(item);
+					this.RemoveAt_Internal(i); // does not recreate listeners
 				}
 				else
 				{
@@ -189,12 +257,13 @@ namespace WidgetUI.Detail
 				}
 			}
 
-			while (m_widgets.Count > m_items.Count)
+			// If items have been removed, recreate all listeners.
+			if(removedItems.Count > 0)
 			{
-				m_widgets.RemoveAt(m_widgets.Count - 1);
+				this.RecreateWidgetListeners();
 			}
 
-			return removeItems;
+			return removedItems;
 		}
 
 		public void Add(T p_item)
@@ -289,7 +358,7 @@ namespace WidgetUI.Detail
 			Button button = widget.GetComponent<Button>();
 			if(button != null)
 			{
-				button.onClick.AddListener(() => { this.OnWidgetClicked(m_items[p_index]); });
+				button.onClick.AddListener(() => { this.OnWidgetClicked(p_index); });
 			}
 
 			m_widgets[p_index] = widget;
@@ -307,9 +376,40 @@ namespace WidgetUI.Detail
 					button.onClick.RemoveAllListeners();
 				}
 
-
 				m_allocator.Destroy(widget);
 				m_widgets[p_index] = null;
+			}
+		}
+
+		protected virtual void RecreateWidgetListener(int p_index)
+		{
+			WidgetType widget = m_widgets[p_index];
+			if (widget != null)
+			{
+				Button button = widget.GetComponent<Button>();
+				if (button != null)
+				{
+					button.onClick.RemoveAllListeners();
+					button.onClick.AddListener(() => { this.OnWidgetClicked(p_index); });
+				}
+			}
+		}
+
+		protected virtual void RecreateWidgetListeners(int p_startIndex = -1, int p_endIndex = -1)
+		{
+			if(p_startIndex < 0)
+			{
+				p_startIndex = 0;
+			}
+
+			if(p_endIndex < 0)
+			{
+				p_endIndex = this.Count - 1;
+			}
+
+			for(int i = p_startIndex; i <= p_endIndex; ++i)
+			{
+				this.RecreateWidgetListener(i);
 			}
 		}
 
@@ -323,9 +423,10 @@ namespace WidgetUI.Detail
 			m_layout.SetWidgetPosition(p_index, p_transform);
 		}
 
-		protected virtual void OnWidgetClicked(T p_item)
+		protected virtual void OnWidgetClicked(int p_index)
 		{
-			m_onItemSelect.Invoke(p_item);
+			m_selectedItemIndex = p_index;
+			m_onItemSelect.Invoke(m_items[p_index]);
 		}
 	}
 }

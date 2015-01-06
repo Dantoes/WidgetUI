@@ -26,18 +26,14 @@ namespace WidgetUI
 
 		public override void Insert(int p_index, T p_item)
 		{
-			m_items.Insert(p_index, p_item);
-			m_widgets.Insert(p_index, null);
-
+			base.Insert(p_index, p_item);
 			this.CreateWidgetAt(p_index);
 		}
 
 		public override void RemoveAt(int p_index)
 		{
 			this.RemoveWidgetAt(p_index);
-
-			m_items.RemoveAt(p_index);
-			m_widgets.RemoveAt(p_index);
+			base.RemoveAt(p_index);
 		}
 
 		public override void Clear()
@@ -47,8 +43,7 @@ namespace WidgetUI
 				this.RemoveWidgetAt(i);
 			}
 
-			m_items.Clear();
-			m_widgets.Clear();
+			base.Clear();
 		}
 	}
 }

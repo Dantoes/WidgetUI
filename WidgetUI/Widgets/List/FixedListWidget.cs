@@ -156,8 +156,7 @@ namespace WidgetUI
 		#region IListWidget implementation
 		public override void Insert(int p_index, T p_item)
 		{
-			m_items.Insert(p_index, p_item);
-			m_widgets.Insert(p_index, null);
+			base.Insert(p_index, p_item);
 
 			// if the removed item is in front of the first visible item, all positions must be recalculated
 			if (p_index < m_renderedItems.Min)
@@ -174,7 +173,6 @@ namespace WidgetUI
 				Range updateRange = new Range(p_index, m_renderedItems.Max);
 				updateRange.ForEach(this.UpdateWidgetPosition);
 			}
-
 
 			this.ScheduleViewUpdate();
 		}
@@ -202,18 +200,14 @@ namespace WidgetUI
 		public override void Clear()
 		{
 			this.InvalidateView();
-			m_items.Clear();
-			m_widgets.Clear();
+			base.Clear();
 		}
 
 		public override void RemoveAt(int p_index)
 		{
 			// try to remove the rendered widget
 			this.RemoveWidgetAt(p_index);
-
-			// remove the index from the managed lists
-			m_items.RemoveAt(p_index);
-			m_widgets.RemoveAt(p_index);
+			base.RemoveAt(p_index);
 
 			// if the last item has been removed, invalidate the rendered widgets range
 			if(this.Count == 0)
@@ -245,6 +239,23 @@ namespace WidgetUI
 			this.InvalidateView();
 			return base.Remove(p_match);
 		}
+
+		protected override void RecreateWidgetListeners(int p_startIndex = -1, int p_endIndex = -1)
+		{
+			if(m_renderedItems != Range.Invalid)
+			{
+				if(p_endIndex < 0)
+				{
+					p_endIndex = m_renderedItems.Max;
+				}
+
+				p_startIndex = Mathf.Max(p_startIndex, m_renderedItems.Min);
+				p_endIndex = Mathf.Min(p_endIndex, m_renderedItems.Max);
+			}
+
+			base.RecreateWidgetListeners(p_startIndex, p_endIndex);
+		}
+
 		#endregion
 	}
 }
