@@ -64,5 +64,25 @@ namespace WidgetUI
 				p_action(i);
 			}
 		}
+
+		public override bool Equals(object obj)
+		{
+			return obj is Range && this == (Range)obj;
+		}
+
+		public override int GetHashCode()
+		{
+			return m_min.GetHashCode() ^ m_count.GetHashCode();
+		}
+
+		public static bool operator==(Range a, Range b)
+		{
+			return a.m_min == b.m_min && a.m_count == b.m_count;
+		}
+		
+		public static bool operator!=(Range a, Range b)
+		{
+			return !(a == b);
+		}
 	}
 }
