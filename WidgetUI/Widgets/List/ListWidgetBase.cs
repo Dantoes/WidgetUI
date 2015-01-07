@@ -423,15 +423,11 @@ namespace WidgetUI.Detail
 
 		protected virtual void RecreateWidgetListener(int p_index)
 		{
-			WidgetType widget = m_widgets[p_index];
-			if (widget != null)
+			Button button = this.GetWidgetComponent<Button>(p_index);
+			if (button != null)
 			{
-				Button button = widget.GetComponent<Button>();
-				if (button != null)
-				{
-					button.onClick.RemoveAllListeners();
-					button.onClick.AddListener(() => { this.OnWidgetClicked(p_index); });
-				}
+				button.onClick.RemoveAllListeners();
+				button.onClick.AddListener(() => { this.OnWidgetClicked(p_index); });
 			}
 		}
 
