@@ -24,8 +24,13 @@ namespace WidgetUI.Detail
 		protected RectTransform m_scrollTransform;
 		protected RectTransform m_contentArea;
 
+		// item selection
 		protected int m_selectedItemIndex = -1;
 		protected ItemSelectEvent<T> m_onItemSelect = new ItemSelectEvent<T>();
+		
+		// button highlight variables
+		protected Button m_selectedButton;
+		protected int m_previouslySelectedItem;
 
 		public ItemSelectEvent<T> OnSelectItem
 		{
@@ -96,6 +101,11 @@ namespace WidgetUI.Detail
 			this.Destruct();
 		}
 
+		protected virtual void LateUpdate()
+		{
+			this.KeepHighlightedButtonPressed();
+		}
+
 		public LayoutType Layout
 		{
 			get { return m_layout; }
@@ -162,10 +172,16 @@ namespace WidgetUI.Detail
 			}
 			set
 			{
-				if(m_selectedItemIndex >= this.Count)
+				if(value >= this.Count)
 				{
 					throw new ArgumentOutOfRangeException("SelectedItemIndex out of range");
 				}
+
+				if (value >= 0)
+				{
+					this.HightlightButton(value);
+				}
+
 				m_selectedItemIndex = value;
 			}
 		}
@@ -374,6 +390,12 @@ namespace WidgetUI.Detail
 				if (button != null)
 				{
 					button.onClick.RemoveAllListeners();
+
+					// if the button is currently selected, unselect it
+					if (p_index == m_selectedItemIndex)
+					{
+						this.RemoveButtonHighlight();
+					}
 				}
 
 				m_allocator.Destroy(widget);
@@ -423,10 +445,97 @@ namespace WidgetUI.Detail
 			m_layout.SetWidgetPosition(p_index, p_transform);
 		}
 
+
 		protected virtual void OnWidgetClicked(int p_index)
 		{
 			m_selectedItemIndex = p_index;
 			m_onItemSelect.Invoke(m_items[p_index]);
+			this.HightlightButton(p_index);
 		}
+
+		protected C GetWidgetComponent<C>(int p_index) where C : Component
+		{
+			WidgetType widget = m_widgets[p_index];
+			return (widget == null) ? null : widget.GetComponent<C>();
+		}
+
+
+		#region Button highlight
+		protected void HightlightButton(int p_index)
+		{
+			// reset the previous button
+			this.RemoveButtonHighlight();
+
+			m_selectedButton = this.GetWidgetComponent<Button>(p_index);
+			if (m_selectedButton != null)
+			{
+				this.PressButton(m_selectedButton);
+			}
+		}
+
+		protected void RemoveButtonHighlight()
+		{
+			if(m_selectedButton != null)
+			{
+				this.ReleaseButton(m_selectedButton);
+				m_selectedButton = null;
+			}
+		}
+
+		protected void KeepHighlightedButtonPressed()
+		{
+			// set the selected button again, in case it has been destroyed and became visible again
+			if (m_selectedItemIndex >= 0 && m_selectedItemIndex == m_previouslySelectedItem && m_selectedButton == null)
+			{
+				this.HightlightButton(m_selectedItemIndex);
+			}
+
+			// inject faked mouse events into Selectable
+			if (m_selectedButton != null)
+			{
+				this.PressButton(m_selectedButton);
+			}
+
+			m_previouslySelectedItem = m_selectedItemIndex;
+		}
+
+		protected virtual void PressButton(int p_index)
+		{
+			Button button = this.GetWidgetComponent<Button>(p_index);
+			if (button != null)
+			{
+				this.PressButton(button);
+			}
+		}
+
+		protected virtual void PressButton(Button p_button)
+		{
+			PointerEventData fakeClickEvent = new PointerEventData(EventSystem.current)
+			{
+				button = PointerEventData.InputButton.Left
+			};
+
+			p_button.OnPointerEnter(fakeClickEvent);
+			p_button.OnPointerDown(fakeClickEvent);
+		}
+
+		protected virtual void ReleaseButton(int p_index)
+		{
+			Button button = this.GetWidgetComponent<Button>(p_index);
+			if(button != null)
+			{
+				this.ReleaseButton(button);
+			}
+		}
+
+		protected virtual void ReleaseButton(Button p_button)
+		{
+			PointerEventData fakeMouseEvent = new PointerEventData(EventSystem.current);
+			p_button.OnPointerUp(fakeMouseEvent);
+			p_button.OnPointerExit(fakeMouseEvent);
+		}
+
+		#endregion
+
 	}
 }

@@ -43,8 +43,10 @@ namespace WidgetUI
 			this.ScheduleViewUpdate();
 		}
 
-		protected virtual void LateUpdate()
+		protected override void LateUpdate()
 		{
+			base.LateUpdate();
+
 			if(m_updateView)
 			{
 				this.UpdateView();
