@@ -29,20 +29,9 @@ namespace WidgetUI.Detail
 		protected ItemSelectEvent<T> m_onItemSelect = new ItemSelectEvent<T>();
 		
 		// button highlight variables
+		protected bool m_highlightSelected = true;
 		protected Button m_selectedButton;
 		protected int m_previouslySelectedItem;
-
-		public ItemSelectEvent<T> OnSelectItem
-		{
-			get
-			{
-				return m_onItemSelect;
-			}
-			set
-			{
-				m_onItemSelect = value;
-			}
-		}
 
 
 		protected virtual void Construct()
@@ -109,6 +98,18 @@ namespace WidgetUI.Detail
 		public LayoutType Layout
 		{
 			get { return m_layout; }
+		}
+
+		public ItemSelectEvent<T> OnSelectItem
+		{
+			get
+			{
+				return m_onItemSelect;
+			}
+			set
+			{
+				m_onItemSelect = value;
+			}
 		}
 
 		public Vector2 ScrollArea
@@ -191,6 +192,23 @@ namespace WidgetUI.Detail
 			get
 			{
 				return (m_selectedItemIndex < 0) ? default(T) : this[m_selectedItemIndex];
+			}
+		}
+
+		public bool HighlightSelected
+		{
+			get
+			{
+				return m_highlightSelected;
+			}
+			set
+			{
+				if(value == false)
+				{
+					this.RemoveButtonHighlight();
+				}
+
+				m_highlightSelected = value;
 			}
 		}
 
@@ -463,6 +481,11 @@ namespace WidgetUI.Detail
 		#region Button highlight
 		protected void HightlightButton(int p_index)
 		{
+			if(!m_highlightSelected)
+			{
+				return;
+			}
+
 			// reset the previous button
 			this.RemoveButtonHighlight();
 
@@ -475,7 +498,12 @@ namespace WidgetUI.Detail
 
 		protected void RemoveButtonHighlight()
 		{
-			if(m_selectedButton != null)
+			if (!m_highlightSelected)
+			{
+				return;
+			}
+
+			if (m_selectedButton != null)
 			{
 				this.ReleaseButton(m_selectedButton);
 				m_selectedButton = null;
@@ -484,6 +512,11 @@ namespace WidgetUI.Detail
 
 		protected void KeepHighlightedButtonPressed()
 		{
+			if (!m_highlightSelected)
+			{
+				return;
+			}
+
 			// set the selected button again, in case it has been destroyed and became visible again
 			if (m_selectedItemIndex >= 0 && m_selectedItemIndex == m_previouslySelectedItem && m_selectedButton == null)
 			{
