@@ -132,14 +132,16 @@ namespace WidgetUI
 				throw new ArgumentException("Content must have a RectTransform component attached", "p_content");
 			}
 
-			if(p_params != null)
+			IWidget<WindowParams> paramReceiver = p_content.GetComponent(typeof(IWidget<WindowParams>)) as IWidget<WindowParams>;
+			if(paramReceiver != null)
 			{
-				IWidget<WindowParams> paramReceiver = p_content.GetComponent(typeof(IWidget<WindowParams>)) as IWidget<WindowParams>;
-				if(paramReceiver != null)
+				if (p_params == null)
 				{
-					p_params.Window = this;
-					paramReceiver.Enable(p_params);
+					p_params = new WindowParams();
 				}
+
+				p_params.Window = this;
+				paramReceiver.Enable(p_params);
 			}
 
 			contentTransform.SetParent(m_contentArea, false);
