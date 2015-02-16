@@ -147,8 +147,8 @@ namespace WidgetUI.Detail
 			set
 			{
 				Vector2 range = this.ScrollRange;
-				float scrollX = value.x / range.x;
-				float scrollY = (value.y - range.y) / -range.y;
+				float scrollX = (range.x == 0) ? 0 : value.x / range.x;
+				float scrollY = (range.y == 0) ? 0 : (value.y - range.y) / -range.y;
 				this.NormalizedScrollPosition = new Vector2(scrollX, scrollY);
 			}
 		}
