@@ -416,6 +416,7 @@ namespace WidgetUI.Detail
 					}
 				}
 
+				widget.Disable();
 				m_allocator.Destroy(widget);
 				m_widgets[p_index] = null;
 			}
