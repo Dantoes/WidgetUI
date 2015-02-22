@@ -62,6 +62,18 @@ namespace WidgetUI
 			}
 		}
 
+		public bool PreventOverflow
+		{
+			get
+			{
+				return m_preventOverflow;
+			}
+			set
+			{
+				m_preventOverflow = value;
+			}
+		}
+
 		// RectTransform reference and caching mechanism
 		[NonSerialized]
 		private RectTransform m_rectTransform;
